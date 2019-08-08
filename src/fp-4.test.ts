@@ -1,51 +1,53 @@
 import {TestScheduler} from 'rxjs/testing';
 import {Collage, Db, User} from "./fp";
 
-// "Wrapper" is a function
+// Can be used to pass down state or a common context or environment
 
-type Env = {
-  db_id: string,
-  user_name: string,
-  collage_title: string
-}
+// *********************************************************************
+// "Wrapper" is a function
+// *********************************************************************
 
 class Foo<ENV, M> {
   f: (env: ENV) => M;
   constructor(f: (env: ENV) => M) {
-    console.log(">>>> Foo");
     this.f = f;
   }
-  map4<R>(f2: (m: M) => ((env: ENV) => R)): Foo<ENV, R> {
+  map<R>(f2: (m: M) => ((env: ENV) => R)): Foo<ENV, R> {
+    // Re-wrapping
     return new Foo((env: ENV): R => {
-      const f1 = this.f;
+      const f1   = this.f;
       const m: M = f1(env);   // Unwrap, then call
-      return f2(m)(env);      // Re-wrap
+      const rf   = f2(m);
+      const r    = rf(env);         // Call the second function
+      return r;
     });
   }
 }
-
-function getDb() {
-  console.log(">>>> getDb");
-  return (env: Env) => new Db(env.db_id);
-}
-function getUser(db: Db) {
-  console.log(">>>> getUser");
-  return (env: Env) => new User(db.id + "/" + env.user_name);
-}
-function getCollage(user: User) {
-  console.log(">>>> getCollage");
-  return (env: Env) => new Collage(user.name + "/" + env.collage_title);
-}
-
 // ============================================================
 
-function loadCollage() {
-  return new Foo(getDb())
-    .map4(getUser)      // Same as (db: Db) => getUser(db)
-    .map4(getCollage)   // Same as (user: User) => getCollage(user));
-};
+it('Foo works', () => {
 
-it('works', () => {
+  type Env = {
+    db_id: string,
+    user_name: string,
+    collage_title: string
+  }
+
+  function getDb() {
+    return (env: Env) => new Db(env.db_id);
+  }
+  function getUser(db: Db) {
+    return (env: Env) => new User(db.id + "/" + env.user_name);
+  }
+  function getCollage(user: User) {
+    return (env: Env) => new Collage(user.name + "/" + env.collage_title);
+  }
+
+  function loadCollage() {
+    return new Foo(getDb())
+      .map(getUser)      // Same as (db: Db) => getUser(db)
+      .map(getCollage)   // Same as (user: User) => getCollage(user));
+  };
 
   const env1: Env = { db_id: "db1", user_name: "user1", collage_title: "collage1"};
   const c1 = loadCollage().f(env1);
