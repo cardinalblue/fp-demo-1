@@ -5,21 +5,16 @@ import {Collage, Db, User} from "./fp";
 // Combine Function/Foo and Try3 Wrappers
 // *********************************************************************
 
-// ============================================================
-// Rewrite Foo and TryX more functionally
-
 class Foo<ENV, M> {
-  f: (env: ENV) => M;
-  constructor(f: (env: ENV) => M) {
-    this.f = f;
-  }
+  constructor(readonly f: (env: ENV) => M) {}
+
   map<R>(f2: (m: M) => ((env: ENV) => R)): Foo<ENV, R> {
     // Re-wrapping
     return new Foo((env: ENV): R => {
-      const f1    = this.f;
+      const f1 = this.f;
       const m: M = f1(env);   // Unwrap, then call
-      const rf   = f2(m);     // <-- Call the second function, but using "map"
-      const r    = rf(env);
+      const rf = f2(m);     // <-- Call the second function, but using "map"
+      const r = rf(env);
       return r;
     });
   }
@@ -140,7 +135,7 @@ it('Combination works', () => {
 
   function getDb() {
     return (env: Env) =>
-      new TryX(new Db(env.db_id));
+      new TryX(new Db(env.db_id), env.errorDb);
   }
   function getUser(_db: TryX<Db>) {
     return (env: Env) =>
@@ -159,4 +154,37 @@ it('Combination works', () => {
       .map(getCollage)   // Same as (user: User) => getCollage(user));
   };
 
+  const env1: Env = {
+    db_id: "db1", user_name: "user1", collage_title: "collage1",
+    errorDb: false, errorUser: false, errorCollage: false
+    };
+
+  expect(loadCollage()).toBeInstanceOf(Foo);
+  expect(loadCollage().f(env1)).toBeInstanceOf(TryX);
+  expect(loadCollage().f(env1).value).toBeInstanceOf(Collage);
+  expect(loadCollage().f(env1).error).toBeFalsy();
+  expect(loadCollage().f(env1).value.title).toBe("db1/user1/collage1");
+
+  expect(loadCollage().f({ ...env1, errorDb: true }).error)
+    .toBeTruthy();
+  expect(loadCollage().f({ ...env1, errorUser: true }).error)
+    .toBeTruthy();
+  expect(loadCollage().f({ ...env1, errorCollage: true }).error)
+    .toBeTruthy();
+
+
+  const c = loadCollage();
+  expect(c).toBeInstanceOf(Foo);
+  expect(c.f(env1)).toBeInstanceOf(TryX);
+  expect(c.f(env1).value).toBeInstanceOf(Collage);
+  expect(c.f(env1).error).toBeFalsy();
+  expect(c.f(env1).value.title).toBe("db1/user1/collage1");
+
+  expect(c.f({ ...env1, errorDb: true }).error)
+    .toBeTruthy();
+  expect(c.f({ ...env1, errorUser: true }).error)
+    .toBeTruthy();
+  expect(c.f({ ...env1, errorCollage: true }).error)
+    .toBeTruthy();
 });
+

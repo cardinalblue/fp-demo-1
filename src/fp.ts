@@ -1,15 +1,12 @@
 
 export class Db {
-  id: string;
-  constructor(id: string = "") { this.id = id; }
+  constructor(readonly id: string = "") {}
 }
 export class User {
-  name: string;
-  constructor(name: string = "") { this.name = name; }
+  constructor(readonly name: string = "") {}
 }
 export class Collage {
-  title: string;
-  constructor(title: string = "") { this.title = title; }
+  constructor(readonly title: string = "") {}
 
 }
 

@@ -28,13 +28,54 @@ it('works', () => {
     return new Collage();
   }
 
-  function loadCollage() {
+  function loadCollage0() {
+    const db      = getDb();
+    const user    = getUser(db);
+    const collage = getCollage(user);
+    return collage;
+  };
+
+  function loadCollage1() {
+    return getCollage(
+      getUser(
+        getDb()
+      )
+    )
+  }
+  function loadCollage2() {
+    return getCollage(getUser(getDb()));
+  };
+
+  function loadCollage3() {
     return getDb()
       .map((db: Db) => getUser(db))
       .map((user: User) => getCollage(user));
   };
 
+  function loadCollage4() {
+    return getDb()
+      .map(getUser)
+      .map(getCollage);
+  };
   // --------------------------------------------------------
 
-  expect(loadCollage()).toBeInstanceOf(Collage);
+  class Box<T> {
+    constructor(readonly t: T) {
+    }
+    map<R>(f: (t: T) => R): Box<R> {
+      return new Box(f(this.t));
+    }
+  }
+
+  function loadCollage5() {
+    return new Box(getDb())
+      .map(getUser)
+      .map(getCollage);
+  };
+
+  expect(loadCollage1()).toBeInstanceOf(Collage);
+  expect(loadCollage2()).toBeInstanceOf(Collage);
+  expect(loadCollage3()).toBeInstanceOf(Collage);
+  expect(loadCollage4()).toBeInstanceOf(Collage);
 });
+

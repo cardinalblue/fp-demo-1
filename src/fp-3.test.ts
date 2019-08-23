@@ -6,13 +6,10 @@ import {Collage, Db, User} from "./fp";
 // *********************************************************************
 
 class TryX<T> {
-  error: boolean;
-  value: T;
-  constructor(value: T, error: boolean = false, ) {
-    this.value = value;
-    this.error = error;
-  }
-  map<R>(f: (t: T) => TryX<R>) {
+  constructor(readonly value: T,
+              readonly error: boolean = false, ) {}
+
+  mapx<R>(f: (t: T) => TryX<R>) {
     const r = f(this.value);
     return new TryX(r.value, this.error || r.error);
   }
@@ -38,8 +35,8 @@ it('works', () => {
 
   function loadCollage() {
     return getDb()
-      .map(getUser)      // Same as (db: Db) => getUser(db)
-      .map(getCollage)   // Same as (user: User) => getCollage(user));
+      .mapx(getUser)      // Same as (db: Db) => getUser(db)
+      .mapx(getCollage)   // Same as (user: User) => getCollage(user));
   };
 
   // ------------------------------------------------------------

@@ -4,14 +4,13 @@ import {Collage, Db, User} from "./fp";
 // Can be used to pass down state or a common context or environment
 
 // *********************************************************************
-// "Wrapper" is a function
+// "Wrapper" is a function.
+// We put inside an object so that it looks the same.
 // *********************************************************************
 
 class Foo<ENV, M> {
-  f: (env: ENV) => M;
-  constructor(f: (env: ENV) => M) {
-    this.f = f;
-  }
+  constructor(readonly f: (env: ENV) => M) {}
+
   map<R>(f2: (m: M) => ((env: ENV) => R)): Foo<ENV, R> {
     // Re-wrapping
     return new Foo((env: ENV): R => {
@@ -23,9 +22,10 @@ class Foo<ENV, M> {
     });
   }
 }
+
 // ============================================================
 
-it('Foo works', () => {
+it('Foo also works', () => {
 
   type Env = {
     db_id: string,

@@ -6,12 +6,9 @@ import {Collage, Db, User} from "./fp";
 // *********************************************************************
 
 class Try<T> {
-  error: boolean;
-  value: T;
-  constructor(value: T, error: boolean = false, ) {
-    this.value = value;
-    this.error = error;
-  }
+  constructor(readonly value: T,
+              readonly error: boolean = false) {}
+
   map<R>(f: (t: T) => R): Try<R> {
     const r = f(this.value);
     return new Try(r, this.error);
@@ -24,7 +21,7 @@ it('works', () => {
 
   var $errorDb = false;
   function getDb() {
-    return new Try(new Db(), $errorDb);
+    return new Db();
   }
   function getUser(db: Db) {
     return new User();
@@ -34,7 +31,7 @@ it('works', () => {
   }
 
   function loadCollage() {
-    return getDb()
+    return new Try(getDb(), $errorDb)
       .map(getUser)      // Same as (db: Db) => getUser(db)
       .map(getCollage)   // Same as (user: User) => getCollage(user));
   };
